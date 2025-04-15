@@ -139,7 +139,7 @@
       document.getElementById("userInput").value = "";
 
       try {
-        let response = await fetch("/query/?natural_query=hello" + encodeURIComponent(userInput), {
+        let response = await fetch("https://ai-agent-project-k3zd.onrender.com/query/?natural_query=" + encodeURIComponent(userInput), {
           method: "POST",
           headers: { "Accept": "application/json" }
         });
