@@ -154,6 +154,7 @@
 
         chatBox.scrollTop = chatBox.scrollHeight;
       } catch (error) {
+        let botReply = data.human_response || "I couldn't find an answer.";
         console.error("Error:", error);
       }
     }
