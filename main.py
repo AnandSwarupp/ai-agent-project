@@ -35,44 +35,46 @@ async def about_us(request: Request):
     return templates.TemplateResponse("about_us.html", {"request":request})
 
 @app.post("/query/")
-def run_query(natural_query: str, db=Depends(get_db_connection)):
-    cursor = db.cursor()
+def run_query(natural_query: str, request: Request, db=Depends(get_db_connection)):
     try:
         ai_response = ai_agent(natural_query)
 
-        if ai_response.strip().upper().startswith(("SELECT", "WITH")):
-            cursor.execute(ai_response)
-            columns = [column[0] for column in cursor.description] if cursor.description else []
-            result = [dict(zip(columns, row)) for row in cursor.fetchall()] if columns else []
-            human_response = generate_user_response(result if result else "No rows returned.")
-
-            if not result:
-                return {
-                    "query": ai_response,
-                    "result": "No data found.",
-                    "human_response": "No relevant data was found in the database."
-                }
-
-            return {
-                "query": ai_response,
-                "result": result,
-                "human_response": human_response if human_response else "No summary available."
-            }
-
-        else:
+        # If AI doesn't suggest a SQL query, return it as response
+        if not ai_response.strip().upper().startswith(("SELECT", "WITH")):
             return {
                 "query": None,
                 "result": None,
                 "human_response": ai_response
             }
 
-    except Exception as e:
-        error_message = traceback.format_exc()
-        logger.error(f"Query Execution Error: {error_message}")
+        # Only try to access DB if it's a SQL query
+        cursor = db.cursor()
+        cursor.execute(ai_response)
+        columns = [column[0] for column in cursor.description] if cursor.description else []
+        result = [dict(zip(columns, row)) for row in cursor.fetchall()] if columns else []
+        human_response = generate_user_response(result if result else "No rows returned.")
 
-        return {"error": "Internal Server Error", "details": error_message}
-
-    finally:
         cursor.close()
         db.close()
+
+        if not result:
+            return {
+                "query": ai_response,
+                "result": "No data found.",
+                "human_response": "No relevant data was found in the database."
+            }
+
+        return {
+            "query": ai_response,
+            "result": result,
+            "human_response": human_response if human_response else "No summary available."
+        }
+
+    except Exception as e:
+        import traceback
+        return {
+            "error": "Internal Server Error",
+            "details": traceback.format_exc()
+        }
+
 
