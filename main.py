@@ -37,9 +37,11 @@ async def about_us(request: Request):
 @app.post("/query/")
 def run_query(natural_query: str, request: Request, db=Depends(get_db_connection)):
     try:
-        ai_response = ai_agent(natural_query)
+        print(f"\nIncoming Query: {natural_query}")  # Log the input
 
-        # If AI doesn't suggest a SQL query, return it as response
+        ai_response = ai_agent(natural_query)
+        print(f"AI Response: {ai_response}")  # Log AI response
+
         if not ai_response.strip().upper().startswith(("SELECT", "WITH")):
             return {
                 "query": None,
@@ -47,7 +49,7 @@ def run_query(natural_query: str, request: Request, db=Depends(get_db_connection
                 "human_response": ai_response
             }
 
-        # Only try to access DB if it's a SQL query
+        # If it's a SQL query, use DB
         cursor = db.cursor()
         cursor.execute(ai_response)
         columns = [column[0] for column in cursor.description] if cursor.description else []
@@ -72,9 +74,9 @@ def run_query(natural_query: str, request: Request, db=Depends(get_db_connection
 
     except Exception as e:
         import traceback
+        error_details = traceback.format_exc()
+        print(f"Error occurred:\n{error_details}")  # Log the traceback
         return {
             "error": "Internal Server Error",
-            "details": traceback.format_exc()
+            "details": error_details
         }
-
-
