@@ -139,7 +139,7 @@
       document.getElementById("userInput").value = "";
 
       try {
-        let response = await fetch("http://127.0.0.1:8000/query/?natural_query=" + encodeURIComponent(userInput), {
+        let response = await fetch("/query/?natural_query=" + encodeURIComponent(userInput), {
           method: "POST",
           headers: { "Accept": "application/json" }
         });
