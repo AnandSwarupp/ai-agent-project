@@ -4,3 +4,6 @@ uvicorn
 pyodbc
 python-dotenv
 jinja2
+pydantic
+sqlalchemy
+python-dotenv
